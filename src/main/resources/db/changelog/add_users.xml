@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+
+    <!-- Создание таблицы user_table с автоинкрементным id -->
+    <changeSet id="20231103-create-user-table" author="your_name">
+        <createTable tableName="user_table">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_of_birth" type="DATE"/>
+            <column name="password" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Вставка данных в таблицу user_table без указания id -->
+    <changeSet id="20231103-add-users" author="your_name">
+        <insert tableName="user_table">
+            <column name="id" value="1"/>
+            <column name="name" value="Иван Иванов"/>
+            <column name="date_of_birth" valueDate="1993-05-01"/>
+            <column name="password" value="password123"/>
+        </insert>
+        <insert tableName="user_table">
+            <column name="id" value="0"/>
+            <column name="name" value="Петр Петров"/>
+            <column name="date_of_birth" valueDate="1990-08-15"/>
+            <column name="password" value="password456"/>
+        </insert>
+        <insert tableName="user_table">
+            <column name="id" value="2"/>
+            <column name="name" value="Светлана Светлова"/>
+            <column name="date_of_birth" valueDate="1988-03-20"/>
+            <column name="password" value="password789"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
