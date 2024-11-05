@@ -1,5 +1,6 @@
 package com.example.crudtask.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
@@ -37,6 +38,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Schema(description = "Список номеров телефонов пользователя")
+    @JsonManagedReference
     private List<PhoneData> phones = new ArrayList<>();
 
     public void addPhone(PhoneData phoneData) {

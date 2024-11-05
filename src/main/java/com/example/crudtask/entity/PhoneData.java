@@ -1,5 +1,6 @@
 package com.example.crudtask.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class PhoneData {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @Schema(name = "Пользователь, к которому принадлежит номер телефона", required = true)
+    @JsonBackReference
     private User user;
 
     @Column(name = "phone", nullable = false, length = 13)
