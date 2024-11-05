@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface EmailDataDAO extends JpaRepository<EmailData, Long> {
     List<EmailData> findByUserId(Long userId);
+    boolean existsByEmail(String email);
 }

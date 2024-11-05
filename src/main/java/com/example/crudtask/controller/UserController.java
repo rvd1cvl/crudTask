@@ -10,21 +10,23 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    @Autowired
     private final UserServiceImpl userService;
 
+    @Autowired
     public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
@@ -37,9 +39,10 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUser(
             @Parameter(description = "ID пользователя для получения информации") @PathVariable Long userId) {
-        User user = userService.getUserById(userId).get();
+        User user = userService.getUserById(userId).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
         return ResponseEntity.ok(user);
     }
+
 
     @Operation(summary = "Получить номера телефонов пользователя", description = "Получить список номеров телефонов пользователя по его ID")
     @ApiResponses(value = {
@@ -77,7 +80,6 @@ public class UserController {
         return ResponseEntity.ok(account);
     }
 
-
     @Operation(summary = "Получить всех пользователей", description = "Получить список всех пользователей")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Список пользователей найден"),
@@ -86,6 +88,151 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
+        if (users.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(users);
+    }
+
+
+    @Operation(summary = "Обновить информацию о пользователе", description = "Обновить информацию о существующем пользователе")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Пользователь обновлен"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PutMapping("/{userId}")
+    public ResponseEntity<User> updateUser(@PathVariable Long userId, @RequestBody User updatedUser) {
+        User user = userService.updateUser(userId, updatedUser);
+        return ResponseEntity.ok(user);
+    }
+
+    @Operation(summary = "Удалить пользователя", description = "Удалить пользователя по его ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Пользователь удален"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Пополнить баланс пользователя", description = "Пополнить баланс пользователя на определенную сумму")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Баланс успешно пополнен"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PostMapping("/{userId}/deposit")
+    public ResponseEntity<Void> deposit(@PathVariable Long userId, @RequestParam BigDecimal amount) {
+        userService.deposit(userId, amount);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Снять средства с баланса пользователя", description = "Снять определенную сумму с баланса пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Средства успешно сняты"),
+            @ApiResponse(responseCode = "400", description = "Недостаточно средств"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PostMapping("/{userId}/withdraw")
+    public ResponseEntity<Void> withdraw(@PathVariable Long userId, @RequestParam BigDecimal amount) {
+        userService.withdraw(userId, amount);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Добавить email пользователю", description = "Добавить новый email к существующему пользователю")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email добавлен"),
+            @ApiResponse(responseCode = "400", description = "Email уже используется"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PostMapping("/{userId}/emails")
+    public ResponseEntity<Void> addEmail(@PathVariable Long userId, @RequestParam String email) {
+        userService.addEmail(userId, email);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Обновить email пользователя", description = "Обновить существующий email пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Email обновлен"),
+            @ApiResponse(responseCode = "400", description = "Email уже используется"),
+            @ApiResponse(responseCode = "404", description = "Email не найден или доступ запрещен")
+    })
+    @PutMapping("/{userId}/emails/{emailId}")
+    public ResponseEntity<Void> updateEmail(@PathVariable Long userId, @PathVariable Long emailId, @RequestParam String newEmail) {
+        userService.updateEmail(userId, emailId, newEmail);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Удалить email пользователя", description = "Удалить email из списка пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Email удален"),
+            @ApiResponse(responseCode = "404", description = "Email не найден или доступ запрещен")
+    })
+    @DeleteMapping("/{userId}/emails/{emailId}")
+    public ResponseEntity<Void> deleteEmail(@PathVariable Long userId, @PathVariable Long emailId) {
+        userService.deleteEmail(userId, emailId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Добавить номер телефона пользователю", description = "Добавить новый номер телефона к существующему пользователю")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Номер телефона добавлен"),
+            @ApiResponse(responseCode = "400", description = "Номер уже используется"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
+    })
+    @PostMapping("/{userId}/phones")
+    public ResponseEntity<Void> addPhone(@PathVariable Long userId, @RequestParam String phone) {
+        userService.addPhone(userId, phone);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Обновить номер телефона пользователя", description = "Обновить существующий номер телефона пользователя")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Номер телефона обновлен"),
+            @ApiResponse(responseCode = "400", description = "Номер уже используется"),
+            @ApiResponse(responseCode = "404", description = "Номер телефона не найден или доступ запрещен")
+    })
+    @PutMapping("/{userId}/phones/{phoneId}")
+    public ResponseEntity<Void> updatePhone(@PathVariable Long userId, @PathVariable Long phoneId, @RequestParam String newPhone) {
+        userService.updatePhone(userId, phoneId, newPhone);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "Удалить номер телефона пользователя", description = "Удалить номер телефона пользователя по его ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Номер телефона удален"),
+            @ApiResponse(responseCode = "404", description = "Номер телефона не найден или доступ запрещен")
+    })
+    @DeleteMapping("/{userId}/phones/{phoneId}")
+    public ResponseEntity<Void> deletePhone(@PathVariable Long userId, @PathVariable Long phoneId) {
+        userService.deletePhone(userId, phoneId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Поиск пользователей с фильтрами и пагинацией", description = "Поиск пользователей с различными критериями фильтрации")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Список пользователей найден"),
+            @ApiResponse(responseCode = "204", description = "Пользователи не найдены")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<Page<User>> searchUsers(
+            @RequestParam(value = "dateOfBirth", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateOfBirth,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        Page<User> users = userService.searchUsers(
+                Optional.ofNullable(dateOfBirth),
+                Optional.ofNullable(phone),
+                Optional.ofNullable(name),
+                Optional.ofNullable(email),
+                page,
+                size
+        );
+
         if (users.isEmpty()) {
             return ResponseEntity.noContent().build();
         }

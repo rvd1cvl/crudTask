@@ -48,6 +48,12 @@ public class User {
     @JsonManagedReference
     private List<EmailData> emails = new ArrayList<>();
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "account_id", unique = true)
+    @Schema(description = "Аккаунт пользователя")
+    @JsonManagedReference
+    private Account account;
+
     public void addEmail(EmailData emailData) {
         emails.add(emailData);
         emailData.setUser(this);
@@ -64,6 +70,9 @@ public class User {
         }
         if (emails.isEmpty()) {
             throw new IllegalArgumentException("Пользователь должен иметь хотя бы один email.");
+        }
+        if (account == null) {
+            throw new IllegalArgumentException("Пользователь должен иметь аккаунт.");
         }
     }
 }
