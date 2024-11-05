@@ -8,6 +8,7 @@ import com.example.crudtask.entity.User;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -20,6 +21,9 @@ public class DataInitializer {
 
     @Autowired
     private UserDAO userDAO;
+
+    @Autowired
+    private SecurityConfig securityConfig;  // Внедрение конфигурации для доступа к методу
 
     private boolean initialized = false;
 
@@ -43,14 +47,17 @@ public class DataInitializer {
     }
 
     private void createUser(String name, LocalDate dateOfBirth, String password, List<String> phoneNumbers, List<String> emails, BigDecimal initialBalance) {
+        BCryptPasswordEncoder passwordEncoder = securityConfig.passwordEncoder();
+
+        String encodedPassword = passwordEncoder.encode(password);
+
         User user = new User();
         user.setName(name);
         user.setDateOfBirth(java.sql.Date.valueOf(dateOfBirth));
-        user.setPassword(password);
+        user.setPassword(encodedPassword);
 
-        // Create Account with initial balance and set bidirectional relationship
         Account account = new Account(initialBalance);
-        account.setUser(user);  // Sets the user in account, and account in user.
+        account.setUser(user);
 
         for (String phoneNumber : phoneNumbers) {
             PhoneData phoneData = new PhoneData(user, phoneNumber);
@@ -66,5 +73,4 @@ public class DataInitializer {
 
         userDAO.save(user);
     }
-
 }

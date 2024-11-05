@@ -36,4 +36,9 @@ public interface UserDAO extends JpaRepository<User, Long> {
             Pageable pageable
     );
 
-    }
+    @Query("SELECT u FROM User u JOIN u.emails e WHERE e.email = :email")
+    User findByEmail(@Param("email") String email);
+
+    @Query("SELECT u FROM User u JOIN u.phones p WHERE p.phone = :phone")
+    User findByPhone(@Param("phone") String phone);
+}
