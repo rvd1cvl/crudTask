@@ -1,11 +1,12 @@
 package com.example.crudtask.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.*;
 
 @Entity
 @Table(name = "email_data")
@@ -24,9 +25,15 @@ public class EmailData {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @Schema(description = "Пользователь, к которому принадлежит email", required = true)
+    @JsonBackReference
     private User user;
 
     @Column(name = "email", nullable = false, length = 200)
     @Schema(description = "Адрес электронной почты", required = true, example = "user@example.com")
     private String email;
+
+    public EmailData(User user, String email) {
+        this.user = user;
+        this.email = email;
+    }
 }

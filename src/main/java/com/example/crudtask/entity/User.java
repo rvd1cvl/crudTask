@@ -3,9 +3,11 @@ package com.example.crudtask.entity;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -41,6 +43,16 @@ public class User {
     @JsonManagedReference
     private List<PhoneData> phones = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Schema(description = "Список email-адресов пользователя")
+    @JsonManagedReference
+    private List<EmailData> emails = new ArrayList<>();
+
+    public void addEmail(EmailData emailData) {
+        emails.add(emailData);
+        emailData.setUser(this);
+    }
+
     public void addPhone(PhoneData phoneData) {
         phones.add(phoneData);
         phoneData.setUser(this);
@@ -49,6 +61,9 @@ public class User {
     public void validate() {
         if (phones.isEmpty()) {
             throw new IllegalArgumentException("Пользователь должен иметь хотя бы один номер телефона.");
+        }
+        if (emails.isEmpty()) {
+            throw new IllegalArgumentException("Пользователь должен иметь хотя бы один email.");
         }
     }
 }

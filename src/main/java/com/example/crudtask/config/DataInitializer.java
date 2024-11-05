@@ -1,25 +1,17 @@
 package com.example.crudtask.config;
 
+import com.example.crudtask.dao.UserDAO;
+import com.example.crudtask.entity.EmailData;
 import com.example.crudtask.entity.PhoneData;
 import com.example.crudtask.entity.User;
-import com.example.crudtask.dao.UserDAO;
-import com.example.crudtask.service.impl.UserServiceImpl;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-
-import com.example.crudtask.entity.PhoneData;
-import com.example.crudtask.entity.User;
-import com.example.crudtask.dao.UserDAO;
-import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 public class DataInitializer {
@@ -31,7 +23,6 @@ public class DataInitializer {
 
     @PostConstruct
     public void init() {
-        // Вызываем инициализацию только один раз
         if (!initialized) {
             initializeUsers();
             initialized = true;
@@ -40,32 +31,36 @@ public class DataInitializer {
 
     @Transactional
     public void initializeUsers() {
-        // Проверяем, есть ли пользователи
         if (userDAO.count() > 0) {
-            System.out.println("Пользователи уже существуют, инициализация не требуется.");
             return;
         }
 
-        // Создаем пользователей, если они отсутствуют
-        createUser("Иван Иванов", LocalDate.of(1993, 5, 1), "password123", "79207865432");
-        createUser("Петр Петров", LocalDate.of(1990, 8, 15), "password456", "79207865433");
-        createUser("Светлана Светлова", LocalDate.of(1988, 3, 20), "password789", "79207865434");
+        createUser("Иван Иванов", LocalDate.of(1993, 5, 1), "password123", Arrays.asList("79207865432"), Arrays.asList("ivanov@mail.com"));
+        createUser("Петр Петров", LocalDate.of(1990, 8, 15), "password456", Arrays.asList("79207865433"), Arrays.asList("petrov@mail.com"));
+        createUser("Светлана Светлова", LocalDate.of(1988, 3, 20), "password789", Arrays.asList("79207865434"), Arrays.asList("svetlova@mail.com"));
     }
 
-    private void createUser(String name, LocalDate dateOfBirth, String password, String phoneNumber) {
+    private void createUser(String name, LocalDate dateOfBirth, String password, List<String> phoneNumbers, List<String> emails) {
         User user = new User();
         user.setName(name);
         user.setDateOfBirth(java.sql.Date.valueOf(dateOfBirth));
         user.setPassword(password);
 
-        // Создаем и добавляем телефонный номер
-        PhoneData phoneData = new PhoneData(user, phoneNumber);
-        user.addPhone(phoneData);
+        for (String phoneNumber : phoneNumbers) {
+            PhoneData phoneData = new PhoneData(user, phoneNumber);
+            user.addPhone(phoneData);
+        }
+
+        // Создаем и добавляем email-адреса
+        for (String email : emails) {
+            EmailData emailData = new EmailData(user, email);
+            user.addEmail(emailData);
+        }
 
         // Валидация пользователя
         user.validate();
 
+        // Сохраняем пользователя
         userDAO.save(user);
-        System.out.println("Пользователь " + name + " был создан.");
     }
 }
