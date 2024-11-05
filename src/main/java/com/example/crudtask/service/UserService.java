@@ -7,9 +7,10 @@ import com.example.crudtask.entity.User;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
-    User getUserById(Long userId);
+    Optional<User> getUserById(Long userId);
     List<User> getAllUsers();
 
     List<PhoneData> getUserPhones(Long userId);

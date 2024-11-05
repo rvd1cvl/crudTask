@@ -5,10 +5,12 @@ import com.example.crudtask.entity.EmailData;
 import com.example.crudtask.entity.PhoneData;
 import com.example.crudtask.entity.User;
 import com.example.crudtask.service.UserService;
+import com.example.crudtask.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +20,10 @@ import java.util.List;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
+    @Autowired
+    private final UserServiceImpl userService;
 
-    public UserController(UserService userService) {
+    public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
 
@@ -32,7 +35,7 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUser(
             @Parameter(description = "ID пользователя для получения информации") @PathVariable Long userId) {
-        User user = userService.getUserById(userId);
+        User user = userService.getUserById(userId).get();
         return ResponseEntity.ok(user);
     }
 

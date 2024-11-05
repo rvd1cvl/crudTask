@@ -29,4 +29,9 @@ public class PhoneData {
     @Column(name = "phone", nullable = false, length = 13)
     @Schema(name = "Номер телефона в формате 79207865432", required = true, example = "79207865432")
     private String phone;
+
+    public PhoneData(User user, String phone) {
+        this.user = user;
+        this.phone = phone;
+    }
 }

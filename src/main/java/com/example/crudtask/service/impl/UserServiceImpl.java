@@ -7,17 +7,21 @@ import com.example.crudtask.entity.EmailData;
 import com.example.crudtask.entity.PhoneData;
 import com.example.crudtask.entity.User;
 import com.example.crudtask.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Autowired
     private final UserDAO userDAO;
     private final AccountDAO accountDAO;
+
 
     public UserServiceImpl(UserDAO userDAO, AccountDAO accountDAO) {
         this.userDAO = userDAO;
@@ -25,7 +29,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getUserById(Long userId) {
+    public Optional<User> getUserById(Long userId) {
         return userDAO.findById(userId);
     }
 
@@ -65,7 +69,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(Long userId, User updatedUser) {
-        User existingUser = userDAO.findById(userId);
+        User existingUser = userDAO.findById(userId).get();
         if (existingUser == null) {
             throw new IllegalArgumentException("Пользователь не найден");
         }
@@ -78,7 +82,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteUser(Long userId) {
-        User user = userDAO.findById(userId);
+        User user = userDAO.findById(userId).get();
         if (user == null) {
             throw new IllegalArgumentException("Пользователь не найден");
         }
