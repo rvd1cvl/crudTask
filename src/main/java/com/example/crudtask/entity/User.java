@@ -67,6 +67,11 @@ public class User implements UserDetails {
     @Column(unique = true, nullable = false)
     private String userEmail;
 
+    public User(String email, String password) {
+        this.userEmail = email;
+        this.password = password;
+    }
+
     public void addEmail(EmailData emailData) {
         emails.add(emailData);
         emailData.setUser(this);

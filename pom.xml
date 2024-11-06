@@ -103,6 +103,9 @@
             <version>0.11.5</version> <!-- Используйте версию 0.12.x или выше -->
         </dependency>
 
+
+
+
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -110,6 +113,21 @@
         </dependency>
 
 
+        <!-- Spring Boot Test starter -->
+
+        <!-- Spring Boot Security starter -->
+
+        <!-- Spring Boot JPA starter (если используется JPA) -->
+
+        <!-- H2 Database (для in-memory тестов) -->
+
+        <!-- Mockito для мокирования -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.0.0</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>

@@ -36,4 +36,8 @@ public class PhoneData {
         this.user = user;
         this.phone = phone;
     }
+
+    public PhoneData(String phone) {
+        this.phone = phone;
+    }
 }
