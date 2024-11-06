@@ -36,4 +36,8 @@ public class EmailData {
         this.user = user;
         this.email = email;
     }
+
+    public EmailData(String email) {
+        this.email = email;
+    }
 }
