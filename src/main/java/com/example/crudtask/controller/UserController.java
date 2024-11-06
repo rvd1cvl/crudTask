@@ -1,5 +1,6 @@
 package com.example.crudtask.controller;
 
+import com.example.crudtask.config.JwtUtil;
 import com.example.crudtask.entity.Account;
 import com.example.crudtask.entity.EmailData;
 import com.example.crudtask.entity.PhoneData;
@@ -91,6 +92,7 @@ public class UserController {
         if (users.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
+
         return ResponseEntity.ok(users);
     }
 

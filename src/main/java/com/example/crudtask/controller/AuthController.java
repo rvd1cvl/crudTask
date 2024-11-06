@@ -40,7 +40,6 @@ public class AuthController {
         );
 
         String username = authentication.getName();
-
         String jwt = jwtUtil.generateToken(username);
 
         return ResponseEntity.ok(new AuthenticationResponse(jwt));

@@ -1,14 +1,20 @@
 package com.example.crudtask.entity;
 
+import com.example.crudtask.config.JwtUtil;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -25,7 +31,7 @@ public class User implements UserDetails {
     @Schema(description = "Уникальный идентификатор пользователя", required = true)
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 500)
+    @Column(name = "name", length = 500)
     @Schema(description = "Имя пользователя", required = true, example = "Иван Иванов")
     private String name;
 
@@ -34,25 +40,35 @@ public class User implements UserDetails {
     @Temporal(TemporalType.DATE)
     private Date dateOfBirth;
 
-    @Column(name = "password", nullable = false, length = 500)
+    @Column(name = "password", length = 500)
     @Schema(description = "Пароль пользователя", required = true, example = "password123")
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Schema(description = "Список номеров телефонов пользователя")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Schema(
+            description = "Список номеров телефонов пользователя",
+            example = "[{\"id\": 1, \"phone\": \"79207865432\"}, {\"id\": 2, \"phone\": \"79876543210\"}]"
+    )
     @JsonManagedReference
-    private List<PhoneData> phones = new ArrayList<>();
+    private Set<PhoneData> phones = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Schema(description = "Список email-адресов пользователя")
+    @Schema(
+            description = "Список email-адресов пользователя",
+            example = "[{\"id\": 1, \"email\": \"ivanov@mail.com\"}]"
+    )
     @JsonManagedReference
-    private List<EmailData> emails = new ArrayList<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private Set<EmailData> emails = new HashSet<>();
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "account_id", unique = true)
-    @Schema(description = "Аккаунт пользователя")
+    @JoinColumn(name = "account_id")
+    @Schema(description = "Аккаунт пользователя",
+            example = "{\"balance\": 1000.50, \"user\": {\"id\": 1, \"name\": \"Иван Иванов\"}}")
     @JsonManagedReference
     private Account account;
+
+    @Column(unique = true, nullable = false)
+    private String userEmail;
 
     public void addEmail(EmailData emailData) {
         emails.add(emailData);
@@ -62,6 +78,21 @@ public class User implements UserDetails {
     public void addPhone(PhoneData phoneData) {
         phones.add(phoneData);
         phoneData.setUser(this);
+    }
+
+    public User(Set<EmailData> emails) {
+        if (emails != null && !emails.isEmpty()) {
+            this.userEmail = emails.iterator().next().getEmail();  // Устанавливаем username как первый email
+        }
+        this.emails = emails;
+    }
+
+    public void setEmails(Set<EmailData> emails) {
+        this.emails = emails;
+
+        if (!emails.isEmpty() && userEmail == null) {
+            this.userEmail = emails.iterator().next().getEmail();
+        }
     }
 
     public void validate() {
@@ -76,6 +107,7 @@ public class User implements UserDetails {
         }
     }
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
@@ -86,11 +118,11 @@ public class User implements UserDetails {
         return password;
     }
 
-    @Override
+    @Transactional
     public String getUsername() {
-        return emails.get(0).getEmail();
+        Hibernate.initialize(this.emails);
+        return emails.isEmpty() ? null : emails.iterator().next().getEmail();
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return true;

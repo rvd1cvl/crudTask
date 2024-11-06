@@ -1,6 +1,8 @@
 package com.example.crudtask.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,16 +21,16 @@ public class PhoneData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(name = "Уникальный идентификатор записи телефона", required = true)
+    @Schema(name = "Уникальный идентификатор записи телефона", required = true, example = "1")
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @Schema(name = "Пользователь, к которому принадлежит номер телефона", required = true)
+    @Schema(name = "Пользователь, к которому принадлежит номер телефона", required = true, example = "1")
     @JsonBackReference
     private User user;
 
-    @Column(name = "phone", nullable = false, length = 13)
+    @Column(name = "phone", nullable = false)
     @Schema(name = "Номер телефона в формате 79207865432", required = true, example = "79207865432")
     private String phone;
 

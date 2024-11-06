@@ -3,24 +3,20 @@ package com.example.crudtask.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
-import java.util.Date;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class JwtUtil {
-    private String secretKey = "your-secret-key-really-long-at-least-256-bits-long-xyz"; // Пример длинного ключа
+    private String secretKey = "your-secret-key-really-long-at-least-256-bits-long-xyz";
 
     public String generateToken(String username) {
         byte[] keyBytes = secretKey.getBytes();
@@ -65,5 +61,18 @@ public class JwtUtil {
 
     public String encodeSecretKey(byte[] key) {
         return Encoders.BASE64URL.encode(key);
+    }
+
+    public static String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            System.out.println("No authentication found!");
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        }
+        return null;
     }
 }

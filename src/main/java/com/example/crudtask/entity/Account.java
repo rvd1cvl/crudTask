@@ -22,12 +22,12 @@ public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Уникальный идентификатор счета", required = true)
+    @Schema(description = "Уникальный идентификатор счета", required = true, example = "1001")
     private Long id;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @Schema(description = "Пользователь, к которому принадлежит счет", required = true)
+    @Schema(description = "Пользователь, к которому принадлежит счет", required = true, example = "1")
     @JsonBackReference
     private User user;
 

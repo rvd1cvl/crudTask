@@ -3,10 +3,9 @@ package com.example.crudtask.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.Objects;
 
 @Entity
 @Table(name = "email_data")
@@ -19,17 +18,17 @@ public class EmailData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Уникальный идентификатор записи email", required = true)
+    @Schema(description = "Уникальный идентификатор записи email", required = true, example = "1")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "user_id", nullable = false)
-    @Schema(description = "Пользователь, к которому принадлежит email", required = true)
+    @Schema(description = "Пользователь, к которому принадлежит email", required = true, example = "1")
     @JsonBackReference
     private User user;
 
     @Column(name = "email", nullable = false, length = 200)
-    @Schema(description = "Адрес электронной почты", required = true, example = "user@example.com")
+    @Schema(description = "Адрес электронной почты", required = true, example = "ivanov@mail.com")
     private String email;
 
     public EmailData(User user, String email) {

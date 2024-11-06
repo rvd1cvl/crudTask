@@ -1,5 +1,7 @@
 package com.example.crudtask.service.impl;
 
+import com.example.crudtask.config.DataInitializer;
+import com.example.crudtask.config.JwtUtil;
 import com.example.crudtask.dao.AccountDAO;
 import com.example.crudtask.dao.EmailDataDAO;
 import com.example.crudtask.dao.PhoneDataDAO;
@@ -19,12 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
-
     private final UserDAO userDAO;
     private final AccountDAO accountDAO;
     private final EmailDataDAO emailDataDAO;
@@ -66,14 +66,76 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public User updateUser(Long userId, User updatedUser) {
-        User existingUser = userDAO.findById(userId).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
 
-        existingUser.setName(updatedUser.getName());
-        existingUser.setDateOfBirth(updatedUser.getDateOfBirth());
-        existingUser.setPassword(updatedUser.getPassword());
 
-        return userDAO.save(existingUser);
+        currentUser.setName(updatedUser.getName());
+        currentUser.setDateOfBirth(updatedUser.getDateOfBirth());
+        currentUser.setPassword(updatedUser.getPassword());
+
+        updatePhones(currentUser, updatedUser);
+        updateEmails(currentUser, updatedUser);
+        updateAccount(currentUser, updatedUser);
+
+        return userDAO.save(currentUser);
     }
+
+    private void updatePhones(User currentUser, User updatedUser) {
+        for (PhoneData updatedPhone : updatedUser.getPhones()) {
+            boolean phoneExists = currentUser.getPhones().stream()
+                    .anyMatch(existingPhone -> existingPhone.getPhone().equals(updatedPhone.getPhone()));
+
+            if (!phoneExists) {
+                updatedPhone.setUser(currentUser);
+                currentUser.getPhones().add(updatedPhone);
+            }
+        }
+
+        currentUser.getPhones().removeIf(existingPhone -> !updatedUser.getPhones().contains(existingPhone));
+    }
+
+    private void updateEmails(User currentUser, User updatedUser) {
+        Set<String> existingEmails = new HashSet<>();
+        for (EmailData emailData : currentUser.getEmails()) {
+            existingEmails.add(emailData.getEmail());
+        }
+
+        Set<String> updatedEmails = new HashSet<>();
+        for (EmailData emailData : updatedUser.getEmails()) {
+            updatedEmails.add(emailData.getEmail());
+        }
+
+        if (!existingEmails.equals(updatedEmails)) {
+            currentUser.getEmails().removeIf(emailData -> !updatedEmails.contains(emailData.getEmail()));
+
+            for (EmailData updatedEmailData : updatedUser.getEmails()) {
+                boolean emailExists = existingEmails.contains(updatedEmailData.getEmail());
+                if (!emailExists) {
+                    updatedEmailData.setUser(currentUser);
+                    currentUser.getEmails().add(updatedEmailData);
+                }
+            }
+        }
+    }
+
+    private void updateAccount(User currentUser, User updatedUser) {
+        if (updatedUser.getAccount() != null) {
+            Account existingAccount = currentUser.getAccount();
+            if (existingAccount != null) {
+                existingAccount.setBalance(updatedUser.getAccount().getBalance());
+            } else {
+                Account newAccount = updatedUser.getAccount();
+                newAccount.setUser(currentUser);
+                currentUser.setAccount(newAccount);
+            }
+        }
+    }
+
+
 
     @Override
     @Transactional
