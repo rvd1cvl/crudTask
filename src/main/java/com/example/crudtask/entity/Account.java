@@ -36,8 +36,14 @@ public class Account {
     @DecimalMin(value = "0.0", inclusive = false)
     private BigDecimal balance;
 
-    public Account(BigDecimal balance) {
-        this.balance = balance;
+    @Column(name = "initial_balance")
+    @Schema(description = "Баланс счета в рублях и копейках", example = "1000.50")
+    @DecimalMin(value = "0.0", inclusive = false)
+    private BigDecimal initialBalance;
+
+    public Account(BigDecimal initialBalance) {
+        this.initialBalance = initialBalance;
+        this.balance = initialBalance;
     }
 
     public void setUser(User user) {

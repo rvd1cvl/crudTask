@@ -1,10 +1,7 @@
 package com.example.crudtask.entity;
 
-import com.example.crudtask.config.JwtUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -82,7 +79,7 @@ public class User implements UserDetails {
 
     public User(Set<EmailData> emails) {
         if (emails != null && !emails.isEmpty()) {
-            this.userEmail = emails.iterator().next().getEmail();  // Устанавливаем username как первый email
+            this.userEmail = emails.iterator().next().getEmail();
         }
         this.emails = emails;
     }

@@ -1,6 +1,7 @@
 package com.example.crudtask.config;
 
 
+import com.example.crudtask.dao.UserDAO;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -16,7 +17,13 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private String secretKey = "your-secret-key-really-long-at-least-256-bits-long-xyz";
+    private static String secretKey = "your-secret-key-really-long-at-least-256-bits-long-xyz";
+
+    private final UserDAO userDAO;
+
+    public JwtUtil(UserDAO userDAO) {
+        this.userDAO = userDAO;
+    }
 
     public String generateToken(String username) {
         byte[] keyBytes = secretKey.getBytes();

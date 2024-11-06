@@ -1,6 +1,5 @@
 package com.example.crudtask.service.impl;
 
-import com.example.crudtask.config.DataInitializer;
 import com.example.crudtask.config.JwtUtil;
 import com.example.crudtask.dao.AccountDAO;
 import com.example.crudtask.dao.EmailDataDAO;
@@ -16,12 +15,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,13 +33,15 @@ public class UserServiceImpl implements UserService {
     private final AccountDAO accountDAO;
     private final EmailDataDAO emailDataDAO;
     private final PhoneDataDAO phoneDataDAO;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserServiceImpl(UserDAO userDAO, AccountDAO accountDAO, EmailDataDAO emailDataDAO, PhoneDataDAO phoneDataDAO) {
+    public UserServiceImpl(UserDAO userDAO, AccountDAO accountDAO, EmailDataDAO emailDataDAO, PhoneDataDAO phoneDataDAO, JwtUtil jwtUtil) {
         this.userDAO = userDAO;
         this.accountDAO = accountDAO;
         this.emailDataDAO = emailDataDAO;
         this.phoneDataDAO = phoneDataDAO;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -61,6 +67,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public Account getUserAccount(Long userId) {
         return accountDAO.findByUserId(userId);
+    }
+
+    public Long getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            String username = authentication.getName();
+            User currentUser = userDAO.findByEmail(username);
+            return currentUser != null ? currentUser.getId() : null;
+        }
+
+        return null;
     }
 
     @Override
@@ -135,11 +153,14 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
-
     @Override
     @Transactional
     public void deleteUser(Long userId) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         User user = userDAO.findById(userId).orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
         userDAO.delete(user);
     }
@@ -147,6 +168,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deposit(Long userId, BigDecimal amount) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         Account account = accountDAO.findByUserId(userId);
         account.setBalance(account.getBalance().add(amount));
         accountDAO.save(account);
@@ -155,6 +181,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void withdraw(Long userId, BigDecimal amount) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         Account account = accountDAO.findByUserId(userId);
         if (account.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Недостаточно средств на счете");
@@ -166,6 +197,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void addEmail(Long userId, String email) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         if (emailDataDAO.existsByEmail(email)) {
             throw new IllegalArgumentException("Этот email уже используется другим пользователем");
         }
@@ -194,6 +230,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deleteEmail(Long userId, Long emailId) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         EmailData emailData = emailDataDAO.findById(emailId)
                 .orElseThrow(() -> new IllegalArgumentException("Email не найден"));
 
@@ -207,6 +248,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void addPhone(Long userId, String phone) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         if (phoneDataDAO.existsByPhone(phone)) {
             throw new IllegalArgumentException("Этот номер телефона уже используется другим пользователем");
         }
@@ -218,6 +264,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updatePhone(Long userId, Long phoneId, String newPhone) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         if (phoneDataDAO.existsByPhone(newPhone)) {
             throw new IllegalArgumentException("Этот номер телефона уже используется другим пользователем");
         }
@@ -235,6 +286,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deletePhone(Long userId, Long phoneId) {
+        User currentUser = userDAO.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден"));
+        if (!JwtUtil.getCurrentUsername().equals(currentUser.getUsername())) {
+            throw new IllegalArgumentException("Может изменяться только текущий пользователь");
+        }
         PhoneData phoneData = phoneDataDAO.findById(phoneId)
                 .orElseThrow(() -> new IllegalArgumentException("Номер телефона не найден"));
 
