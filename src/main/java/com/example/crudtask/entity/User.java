@@ -72,6 +72,12 @@ public class User implements UserDetails {
         this.password = password;
     }
 
+    public User(Long userId, String testUser, String mail) {
+        this.id = userId;
+        this.name = testUser;
+        this.userEmail = mail;
+    }
+
     public void addEmail(EmailData emailData) {
         emails.add(emailData);
         emailData.setUser(this);
